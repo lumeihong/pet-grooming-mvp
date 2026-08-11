@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+.expo/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# native
+*.keystore
+!debug.keystore
+ios/
+android/
+
+# misc
+.DS_Store
+*.log
+.env*.local
