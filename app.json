@@ -23,7 +23,7 @@
     },
     "extra": {
       "SUPABASE_URL": "https://qyskgaoyhinibkwqqdko.supabase.co",
-      "SUPABASE_ANON_KEY": "REPLACE_WITH_YOUR_PUBLISHABLE_KEY",
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5c2tnYW95aGluaWJrd3FxZGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0ODA1MTEsImV4cCI6MjEwMjA1NjUxMX0._lDknws3k-GTioBu2dL9xxDGaR6-LNKZ2HhvNqg0jKQ",
       "USE_DEMO_MODE": "true"
     }
   }
