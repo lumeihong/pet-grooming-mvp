@@ -1,0 +1,63 @@
+erDiagram
+    auth_users {
+        uuid id PK "Supabase Auth"
+    }
+    profiles {
+        uuid id PK "FK auth.users"
+        text phone UK "OTP"
+        user_role role "client/groomer"
+        text name
+        timestamptz created_at
+    }
+    groomers {
+        uuid id PK "FK auth.users"
+        text name
+        numeric rating "numeric(2,1)"
+        int reviews_count
+        numeric base_price "numeric(8,2)"
+        text services "text[]"
+        text area
+        double lat
+        double lng
+        boolean online
+        numeric completion_rate "numeric(3,2)"
+        int response_min
+        text bio
+        text paynow
+        boolean approved
+    }
+    orders {
+        uuid id PK
+        uuid client_id FK "auth.users"
+        uuid groomer_id FK "auth.users"
+        pet_type pet_type "dog/cat"
+        text pet_size "S/M/L"
+        text services "text[]"
+        date preferred_date
+        text time_window
+        double lat
+        double lng
+        text address
+        numeric budget_min "numeric(8,2)"
+        numeric budget_max
+        text note
+        order_status status "状态机"
+        boolean deposit_paid
+        numeric deposit_amount
+        numeric final_amount
+        jsonb review
+        timestamptz created_at
+    }
+    chat_messages {
+        uuid id PK
+        uuid order_id FK "orders"
+        uuid from_user FK "auth.users"
+        text text
+        text image
+        timestamptz at
+    }
+    auth_users ||--|| profiles : "1:1"
+    auth_users ||--|| groomers : "1:1"
+    profiles ||--o{ orders : "客户1:N"
+    groomers ||--o{ orders : "美容师1:N"
+    orders ||--o{ chat_messages : "1:N"
