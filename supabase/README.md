@@ -45,7 +45,33 @@ select tablename from pg_tables where schemaname = 'public' order by tablename;
 }
 ```
 
-`anon key` 在 Supabase 控制台 **Settings → API → Project API keys → anon public** 获取。
+### Project URL 怎么拼
+
+控制台地址形如 `https://supabase.com/dashboard/project/<project-ref>/settings/api-keys`，
+其中 `<project-ref>` 就是项目 ID。代码里要填的 **Project URL** 为：
+
+```
+https://<project-ref>.supabase.co
+```
+
+例如 project-ref 为 `qyskgaoyhinibkwqqdko`，则 URL 为 `https://qyskgaoyhinibkwqqdko.supabase.co`。
+
+### key 选哪个
+
+- **publishable / anon key**（前端用，受 RLS 限制）：可安全写进 `app.json`
+- **secret / service_role key**（绕过 RLS，管理员）：**切勿**进前端代码或提交仓库
+
+`anon / publishable key` 在 Supabase 控制台 **Settings → API → Project API keys** 获取（点眼睛图标展开复制完整 JWT）。
+
+## 可选：种子数据
+
+建表后想立刻有可匹配的美容师，运行 [`seed.sql`](./seed.sql)：
+
+1. 先用 App 以"美容师"角色注册 2~3 个账号（手机号 OTP）
+2. **Authentication → Users** 复制这些用户 id
+3. 把 `seed.sql` 里的 `<GROOMER_AUTH_UUID_1/2/3>` 替换后，在 SQL Editor 运行
+
+> 注意：`groomers.id` 是 `auth.users` 的外键，种子必须对应真实注册用户，否则会因 FK 失败。
 
 ## 不在 schema 里的事
 
