@@ -63,18 +63,41 @@ https://<project-ref>.supabase.co
 
 `anon / publishable key` 在 Supabase 控制台 **Settings → API → Project API keys** 获取（点眼睛图标展开复制完整 JWT）。
 
-## 可选：种子数据
+## 可选：测试种子数据（TEST DATA）
 
-建表后想立刻有可匹配的美容师，运行 [`seed.sql`](./seed.sql)：
+> 原则：测试环境用**格式与真实完全一致、内容为测试**的假数据跑通闭环；真上线后清掉重灌真实数据。
 
-1. 先用 App 以"美容师"角色注册 2~3 个账号（手机号 OTP）
-2. **Authentication → Users** 复制这些用户 id
-3. 把 `seed.sql` 里的 `<GROOMER_AUTH_UUID_1/2/3>` 替换后，在 SQL Editor 运行
+建表后想立刻有可匹配的美容师 + 测试订单，运行 [`seed.sql`](./seed.sql)：
 
-> 注意：`groomers.id` 是 `auth.users` 的外键，种子必须对应真实注册用户，否则会因 FK 失败。
+1. 项目 → **SQL Editor → New query**
+2. 全选粘贴 `seed.sql` 内容（含 3 个测试美容师、1 个测试客户、2 条测试订单、聊天记录）
+3. **Run**
+
+种子包含：
+- 3 个测试美容师（`+6598000001/2/3`，密码 `test1234`）：Asha / Wei Jie 在线，Mei Ling 离线（演示在线过滤）
+- 1 个测试客户（`+6598000010`）
+- 订单 A：`confirmed`（聊天开启中，可演示临时聊天）
+- 订单 B：`completed`（聊天已自动关闭，可演示隐私关闭 + 后台纠纷查看）
+- 对应 `chat_messages`
+
+> 注意：`seed.sql` 会向 `auth.users` 插入测试登录账号（绕过外键）。SQL Editor 是管理员上下文可执行；**用 anon key 的 REST API 无法执行此文件**（权限不足）。运行后测试账号即可在 App 用对应手机号登录。
+
+### 备选：不想碰 auth.users 时用 API 灌
+
+[`scripts/seed-via-api.mjs`](./seed-via-api.mjs) 通过 Supabase Auth signUp 创建账号再插 groomers。前提：项目 Phone 登录配置允许 signUp（当前项目要求密码，需脚本内补 `password` 字段，且 signUp 后需 verifyOtp 才能写 groomers）。适合已配置好 Test OTP 的场景。
+
+### 清空测试数据（上线前）
+
+```sql
+delete from public.chat_messages;
+delete from public.orders;
+delete from public.groomers;
+delete from public.profiles;
+delete from auth.users where phone like '+65980000%';
+```
 
 ## 不在 schema 里的事
 
-- **不会创建 Auth 用户**：手机号 OTP 需要在 Supabase 控制台 **Authentication → Providers → Phone** 开启并配置短信服务商（Twilio 等）。
+- **不会创建 Auth 用户**：手机号 OTP 需要在 Supabase 控制台 **Authentication → Providers → Phone** 开启并配置短信服务商（Twilio 等）。`seed.sql` 是测试环境手动灌的例外。
 - **不会自动插入 demo 数据**：上线初期由美容师注册申请，前端调用 `profiles` upsert 完成。
 - **不会建 Storage bucket**：聊天图片（如启用）需在 Storage 里建一个私有 bucket 并配置上传策略。

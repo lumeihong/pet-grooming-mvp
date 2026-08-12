@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Card, Label, Sub } from '../components/ui';
-import { colors, gap } from '../theme';
+import { Card, Label, Sub } from '../../components/ui';
+import { colors, gap } from '../../theme';
 import { api } from '../../lib/api';
 
 // 极简后台：美容师审核 / 订单总览 / 聊天记录(纠纷) / 基础数据

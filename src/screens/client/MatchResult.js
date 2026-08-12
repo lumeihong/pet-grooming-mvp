@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { BigButton, Card, Sub } from '../components/ui';
-import { colors, gap } from '../theme';
+import { BigButton, Card, Sub } from '../../components/ui';
+import { colors, gap } from '../../theme';
 
 export default function MatchResult({ navigation, route }) {
   const { order } = route.params;

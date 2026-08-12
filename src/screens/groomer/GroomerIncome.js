@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Card, Label, Sub } from '../components/ui';
-import { colors, gap } from '../theme';
+import { Card, Label, Sub } from '../../components/ui';
+import { colors, gap } from '../../theme';
 import { api } from '../../lib/api';
 
 export default function GroomerIncome({ session }) {

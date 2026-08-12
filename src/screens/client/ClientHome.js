@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { BigButton, Card, Sub, STATUS_LABEL } from '../components/ui';
-import { colors, gap } from '../theme';
+import { BigButton, Card, Sub, STATUS_LABEL } from '../../components/ui';
+import { colors, gap } from '../../theme';
 import { api } from '../../lib/api';
 
 export default function ClientHome({ navigation, session }) {

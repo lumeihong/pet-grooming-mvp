@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { BigButton, Card, Label, Sub, Pill } from '../components/ui';
-import { colors, gap } from '../theme';
+import { BigButton, Card, Label, Sub, Pill } from '../../components/ui';
+import { colors, gap } from '../../theme';
 import { api } from '../../lib/api';
 
 export default function PayDeposit({ navigation, route }) {

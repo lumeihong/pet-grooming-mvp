@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { BigButton, Card, Label, Sub } from '../components/ui';
-import { colors, gap } from '../theme';
+import { BigButton, Card, Label, Sub } from '../../components/ui';
+import { colors, gap } from '../../theme';
 import { api } from '../../lib/api';
 
 export default function MyProfile({ navigation, session }) {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView } from 'react-native';
-import { BigButton, Card, Label, Sub, Pill } from '../components/ui';
-import { colors, gap } from '../theme';
+import { BigButton, Card, Label, Sub, Pill } from '../../components/ui';
+import { colors, gap } from '../../theme';
 import { api } from '../../lib/api';
 
 const SERVICES = ['bath', 'haircut', 'nails', 'spa'];
