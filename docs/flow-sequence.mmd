@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant O as 客户
+    participant S as 系统
+    participant G as 美容师
+    participant P as 支付/聊天
+    O->>S: 发布需求(宠物/体型/服务/时间/地址/预算)
+    S->>S: 匹配引擎 硬过滤+排序权重
+    S-->>O: 推荐1-3位美容师
+    O->>S: 选择一位确认
+    S->>P: 进入支付定金
+    O->>P: 支付定金 PayNow
+    P-->>S: 订单=已确认 聊天开启
+    S->>G: 推送新订单
+    G->>S: 接单/出发/到达/服务中
+    O->>P: 临时聊天(文字/图片)
+    G->>P: 沟通细节
+    G->>S: 标记完成
+    S-->>P: 聊天自动关闭(隐私)
+    S-->>O: 评价页
+    O->>S: 星级+文字
+    S-->>G: 评价计入档案
