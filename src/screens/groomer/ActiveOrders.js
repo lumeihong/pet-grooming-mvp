@@ -2,19 +2,19 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { BigButton, Card, Label, Sub, StatusBar, STATUS_LABEL } from '../../components/ui';
-import { colors, gap } from '../../theme';
+import { colors } from '../../theme';
 import { api } from '../../lib/api';
 import { useSession } from '../../lib/SessionContext';
 
+// 进行中订单：美容师操作仅两步 —— 开始服务 / 完成服务。
 export default function ActiveOrders({ navigation }) {
   const { session } = useSession();
   const [orders, setOrders] = useState([]);
 
   const load = useCallback(async () => {
-    const list = await api.listMyOrders(session?.id || 'u_groomer_demo', 'groomer');
-    setOrders(
-      (list || []).filter((o) => ['confirmed', 'in_progress', 'awaiting_deposit'].includes(o.status))
-    );
+    if (!session?.id) return;
+    const list = await api.listAssignedOrders(session.id);
+    setOrders((list || []).filter((o) => ['confirmed', 'in_progress'].includes(o.status)));
   }, [session?.id]);
 
   useFocusEffect(
@@ -51,10 +51,10 @@ export default function ActiveOrders({ navigation }) {
           )}
 
           {o.status === 'confirmed' && (
-            <BigButton label="我已出发 / 服务中" variant="ghost" onPress={() => advance(o.id, 'in_progress')} />
+            <BigButton label="开始服务" onPress={() => advance(o.id, 'in_progress')} />
           )}
           {o.status === 'in_progress' && (
-            <BigButton label="服务完成" onPress={() => advance(o.id, 'completed')} />
+            <BigButton label="完成服务" onPress={() => advance(o.id, 'completed')} />
           )}
         </Card>
       ))}
@@ -67,4 +67,3 @@ const styles = StyleSheet.create({
   row: { fontSize: 16, fontWeight: '600', marginTop: 6 },
   link: { color: colors.primary, fontWeight: '700', marginTop: 8 },
 });
-

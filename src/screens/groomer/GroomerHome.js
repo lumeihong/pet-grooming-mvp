@@ -1,23 +1,23 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { BigButton, Card, Label, Sub, Pill } from '../../components/ui';
+import { BigButton, Card, Label, Sub, Pill, StatusBar, STATUS_LABEL } from '../../components/ui';
 import { colors, gap } from '../../theme';
 import { api } from '../../lib/api';
 import { useSession } from '../../lib/SessionContext';
 
-const G_LAT = 1.2766;
-const G_LNG = 103.845;
-
+// 绑定模式：客户选人 + 付定金后，订单指派给美容师。
+// 美容师在此确认并执行，无抢单大厅。
 export default function GroomerHome({ navigation }) {
   const { session } = useSession();
   const [online, setOnline] = useState(true);
   const [orders, setOrders] = useState([]);
 
   const load = useCallback(async () => {
-    const list = await api.listOpenOrders(G_LAT, G_LNG);
+    if (!session?.id) return;
+    const list = await api.listAssignedOrders(session.id);
     setOrders(list || []);
-  }, []);
+  }, [session?.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -27,10 +27,19 @@ export default function GroomerHome({ navigation }) {
 
   const toggle = () => setOnline((v) => !v);
 
+  const start = async (id) => {
+    await api.advanceStatus(id, 'in_progress');
+    load();
+  };
+  const finish = async (id) => {
+    await api.completeOrder(id);
+    load();
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
       <View style={styles.header}>
-        <Text style={styles.title}>接单大厅</Text>
+        <Text style={styles.title}>派给我的订单</Text>
         <Pill active={online} onPress={toggle}>
           {online ? '● 接单中' : '○ 已关闭'}
         </Pill>
@@ -38,25 +47,40 @@ export default function GroomerHome({ navigation }) {
 
       <Sub style={{ marginBottom: gap }}>你好，{session?.name || '美容师'}</Sub>
 
-      <BigButton
-        label={online ? '正在接收附近订单' : '点击开启接单'}
-        onPress={toggle}
-        variant={online ? 'primary' : 'ghost'}
-      />
-
-      <Label>附近可接订单（{orders.length}）</Label>
-      {orders.length === 0 && <Sub>暂无新订单。请先用客户账号发布需求，再切回美容师查看。</Sub>}
+      <Label>待处理（{orders.length}）</Label>
+      {orders.length === 0 && (
+        <Sub>暂无指派订单。客户选择您并支付定金后，订单会出现在这里。</Sub>
+      )}
       {orders.map((o) => (
         <Card key={o.id}>
+          <StatusBar status={o.status} />
           <Text style={styles.row}>
             {o.pet_type === 'dog' ? '🐶' : '🐱'} {o.pet_size} · {(o.services || []).join('、')}
           </Text>
           <Sub>
-            距您约 {typeof o.dist === 'number' ? o.dist.toFixed(1) : '-'} km · {o.time_window}
+            {STATUS_LABEL[o.status] || o.status} · {o.time_window}
           </Sub>
           <Sub>预算：{o.budget_max ? `S$ ${o.budget_max}` : '不限'}</Sub>
+
+          {o.status === 'awaiting_deposit' && (
+            <Sub style={styles.wait}>⏳ 客户已选择您，等待客户支付定金…</Sub>
+          )}
+          {o.status === 'confirmed' && (
+            <BigButton label="开始服务" onPress={() => start(o.id)} />
+          )}
+          {o.status === 'in_progress' && (
+            <View>
+              {api.chatOpen(o) && (
+                <TouchableOpacity onPress={() => navigation.navigate('Chat', { orderId: o.id })}>
+                  <Text style={styles.link}>进入聊天 →</Text>
+                </TouchableOpacity>
+              )}
+              <BigButton label="完成服务" onPress={() => finish(o.id)} />
+            </View>
+          )}
+
           <TouchableOpacity onPress={() => navigation.navigate('OrderTake', { orderId: o.id })}>
-            <Text style={styles.link}>查看并接单 →</Text>
+            <Text style={styles.link}>查看详情 →</Text>
           </TouchableOpacity>
         </Card>
       ))}
@@ -82,7 +106,7 @@ const styles = StyleSheet.create({
   wrap: { padding: 20, backgroundColor: colors.bg, minHeight: '100%' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { fontSize: 22, fontWeight: '800' },
-  row: { fontSize: 16, fontWeight: '600' },
-  link: { color: colors.primary, fontWeight: '700', marginTop: 6 },
+  row: { fontSize: 16, fontWeight: '600', marginTop: 6 },
+  wait: { color: colors.warn, marginTop: 6, fontWeight: '600' },
+  link: { color: colors.primary, fontWeight: '700', marginTop: 8 },
 });
-

@@ -1,6 +1,6 @@
 // 端到端逻辑验证（不依赖 RN 运行时）：验证闭环与聊天隐私规则
-require('@babel/register')({ configFile: false, babelrc: false, presets: ['@babel/preset-env', '@babel/preset-react'], extensions: ['.js'], only: [/src\/lib/] });
-const { demoApi } = require('../src/lib/demoStore');
+// Node >= 22.12 原生支持 require(ESM)，demoStore 为纯 ESM、无顶层 await，可直接引用。
+const { demoApi } = require('../src/lib/demoStore.js');
 
 (async () => {
   const assert = (c, m) => { if (!c) { console.error('❌ FAIL:', m); process.exit(1); } else console.log('✅', m); };
@@ -34,6 +34,10 @@ const { demoApi } = require('../src/lib/demoStore');
   assert(o.status === 'confirmed' && o.deposit_paid, '支付后 confirmed + 定金已付');
   assert(demoApi.chatOpen(o) === true, '聊天开启');
 
+  // 5b. 绑定模式：美容师"派给我的订单"中可见
+  let assigned = await demoApi.listAssignedOrders(g.id);
+  assert(assigned.some((x) => x.id === order.id), '美容师可见指派订单（绑定模式）');
+
   // 6. 聊天可发
   const msg = await demoApi.sendMessage(order.id, user.id, '我住XX小区');
   assert(msg && msg.text === '我住XX小区', '聊天可发送');
@@ -43,11 +47,13 @@ const { demoApi } = require('../src/lib/demoStore');
   o = await demoApi.getOrder(order.id);
   assert(o.status === 'in_progress', '进入 in_progress');
 
-  // 8. 完成 -> 聊天自动关闭
+  // 8. 完成 -> 聊天自动关闭 + 从指派列表移除
   await demoApi.completeOrder(order.id);
   o = await demoApi.getOrder(order.id);
   assert(o.status === 'completed', '完成');
   assert(demoApi.chatOpen(o) === false, '完成后聊天关闭');
+  assigned = await demoApi.listAssignedOrders(g.id);
+  assert(!assigned.some((x) => x.id === order.id), '完成后从指派列表移除');
   const afterClose = await demoApi.sendMessage(order.id, user.id, '还能发吗');
   assert(afterClose === null, '完成后聊天不可再发（隐私规则）');
 

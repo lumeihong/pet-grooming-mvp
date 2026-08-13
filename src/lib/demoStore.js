@@ -161,6 +161,20 @@ export const demoApi = {
       .sort((a, b) => a.dist - b.dist);
   },
 
+  // 绑定模式：派给我的待确认/进行中订单
+  async listAssignedOrders(groomerId) {
+    return state.orders
+      .filter((o) => o.groomer_id === groomerId && ['awaiting_deposit', 'confirmed', 'in_progress'].includes(o.status))
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  },
+
+  // 美容师确认接单：awaiting_deposit -> confirmed
+  async acceptOrder(orderId) {
+    const o = state.orders.find((x) => x.id === orderId);
+    if (o) o.status = 'confirmed';
+    return o;
+  },
+
   // 发布需求 -> 匹配
   async createOrder(orderInput) {
     const order = {

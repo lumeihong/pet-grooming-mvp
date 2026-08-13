@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Card, Label, Sub } from '../../components/ui';
-import { colors, gap } from '../../theme';
+import { Card, Label, Sub, STATUS_LABEL } from '../../components/ui';
+import { colors } from '../../theme';
 import { api } from '../../lib/api';
 
-// 极简后台：美容师审核 / 订单总览 / 聊天记录(纠纷) / 基础数据
+// 极简后台（只读）：数据概览 / 订单列表 / 聊天记录(纠纷处理)。
+// 不做管理操作，MVP 阶段仅用于监控与纠纷取证。
 export default function AdminScreen() {
   const [overview, setOverview] = useState(null);
-  const [groomers, setGroomers] = useState([]);
+  const [groomerCount, setGroomerCount] = useState(0);
   const [orders, setOrders] = useState([]);
   const [chat, setChat] = useState(null);
 
   const load = async () => {
     setOverview(await api.adminOverview());
-    setGroomers(await api.adminGroomers());
+    setGroomerCount((await api.adminGroomers()).length);
     setOrders(await api.adminOrders());
   };
   useEffect(() => { load(); }, []);
@@ -25,26 +26,22 @@ export default function AdminScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
-      <Label>基础数据</Label>
+      <Label>数据概览</Label>
       <Card>
-        <Sub>今日/累计订单：{overview?.total ?? 0}</Sub>
-        <Sub>已完成：{overview?.completed ?? 0}</Sub>
-        <Sub>完成率：{((overview?.completion_rate ?? 0) * 100).toFixed(0)}%</Sub>
-        <Sub>入驻美容师：{groomers.length}</Sub>
+        <Sub>累计订单:{overview?.total ?? 0}</Sub>
+        <Sub>已完成:{overview?.completed ?? 0}</Sub>
+        <Sub>完成率:{((overview?.completion_rate ?? 0) * 100).toFixed(0)}%</Sub>
+        <Sub>入驻美容师:{groomerCount}</Sub>
       </Card>
 
-      <Label>美容师审核</Label>
-      {groomers.map((g) => (
-        <Card key={g.id}>
-          <Text style={styles.row}>{g.name} · ★ {g.rating}</Text>
-          <Sub>{g.area} · {g.services.join('、')} · {g.approved ? '✅ 已通过' : '⏳ 待审核'}</Sub>
-        </Card>
-      ))}
-
-      <Label>订单总览</Label>
+      <Label>订单列表（只读）</Label>
+      {orders.length === 0 && <Sub>暂无订单。</Sub>}
       {orders.map((o) => (
         <Card key={o.id}>
-          <Text style={styles.row}>{o.pet_type === 'dog' ? '🐶' : '🐱'} {o.services.join('、')} · {o.status}</Text>
+          <Text style={styles.row}>
+            {o.pet_type === 'dog' ? '🐶' : '🐱'} {(o.services || []).join('、')} · {STATUS_LABEL[o.status] || o.status}
+          </Text>
+          <Sub>订单号:{o.id.slice(-6)} · 定金:{o.deposit_paid ? '已付' : '未付'}</Sub>
           <TouchableOpacity onPress={() => viewChat(o.id)}>
             <Text style={styles.link}>查看聊天记录（纠纷） →</Text>
           </TouchableOpacity>

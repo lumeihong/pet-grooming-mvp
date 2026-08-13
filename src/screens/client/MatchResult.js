@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { BigButton, Card, Sub } from '../../components/ui';
-import { colors, gap } from '../../theme';
+import { colors } from '../../theme';
 import { api } from '../../lib/api';
 
 export default function MatchResult({ navigation, route }) {
@@ -31,7 +31,7 @@ export default function MatchResult({ navigation, route }) {
         </Card>
       )}
 
-      {matches.map((g, i) => (
+      {matches.map((g, i) => ( // 绑定模式：客户选定一位即付定金，无"继续等待接单"
         <Card key={g.id}>
           <View style={styles.top}>
             <Text style={styles.name}>
@@ -55,10 +55,6 @@ export default function MatchResult({ navigation, route }) {
           />
         </Card>
       ))}
-
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text style={styles.link}>继续等待更多接单 →</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -69,6 +65,5 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   name: { fontSize: 17, fontWeight: '700' },
   rating: { fontSize: 16, fontWeight: '700', color: colors.warn },
-  link: { color: colors.primary, fontWeight: '700', textAlign: 'center', marginTop: gap },
 });
 

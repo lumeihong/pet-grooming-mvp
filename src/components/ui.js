@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   barText: { fontSize: 12, color: colors.sub },
 });
 
-// 订单状态进度条（已确认 -> 出发 -> 到达 -> 服务中 -> 完成）
+// 订单状态进度条（已确认 -> 进行中 -> 已完成，美容师仅"开始/完成"两步操作）
 export const STATUS_FLOW = ['confirmed', 'in_progress', 'completed'];
 export const STATUS_LABEL = {
   matching: '匹配中',

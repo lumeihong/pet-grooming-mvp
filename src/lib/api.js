@@ -7,15 +7,32 @@ export const API_MODE = isDemo ? 'demo' : 'supabase';
 // ---------- 真实 Supabase 实现 ----------
 // 表结构与 supabase/schema.sql 对应。认证用 Supabase Auth (手机号 OTP)。
 const supabaseApi = {
-  async signIn(phone, role) {
-    // 演示中手机号 OTP 需真实短信服务；此处以 phone 直接 upsert profile。
-    const { data, error } = await supabase
+  // 手机号 + 密码登录（Supabase Auth）。优先登录；若账号不存在则自动注册。
+  // 密码默认: seed 测试账号为 test1234；新注册用户需自己设置。
+  async signIn(phone, role, password = 'test1234') {
+    // 1) 尝试登录
+    let { data, error } = await supabase.auth.signInWithPassword({ phone, password });
+    if (error) {
+      // 2) 账号不存在则注册
+      const signUpRes = await supabase.auth.signUp({
+        phone,
+        password,
+        options: { data: { role } },
+      });
+      if (signUpRes.error) throw signUpRes.error;
+      if (!signUpRes.data.user) throw new Error('注册未返回用户，请检查手机号');
+      data = signUpRes.data;
+    }
+    const user = data.user;
+    const userRole = user.user_metadata?.role || role;
+    // 3) 同步 profiles（RLS: auth.uid()=id，此时已有 session）
+    const { data: profile, error: pErr } = await supabase
       .from('profiles')
-      .upsert({ phone, role }, { onConflict: 'phone' })
+      .upsert({ id: user.id, phone, role: userRole, name: user.user_metadata?.name || '' }, { onConflict: 'id' })
       .select()
       .single();
-    if (error) throw error;
-    return { user: data };
+    if (pErr) throw pErr;
+    return { user: { id: user.id, phone, role: userRole, name: profile?.name } };
   },
   async signOut() {
     await supabase.auth.signOut();
@@ -64,6 +81,26 @@ const supabaseApi = {
   async listOpenOrders() {
     const { data } = await supabase.from('orders').select('*').in('status', ['matching', 'pending']);
     return data || [];
+  },
+  // 绑定模式：查询派给我的待确认订单（客户已选人+付定金，等待我确认）
+  async listAssignedOrders(groomerId) {
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('groomer_id', groomerId)
+      .in('status', ['awaiting_deposit', 'confirmed', 'in_progress'])
+      .order('created_at', { ascending: false });
+    return data || [];
+  },
+  // 美容师确认接单：awaiting_deposit -> confirmed（聊天开启）
+  async acceptOrder(orderId) {
+    const { data } = await supabase
+      .from('orders')
+      .update({ status: 'confirmed' })
+      .eq('id', orderId)
+      .select()
+      .single();
+    return data;
   },
   async advanceStatus(orderId, next) {
     const { data } = await supabase.from('orders').update({ status: next }).eq('id', orderId).select().single();

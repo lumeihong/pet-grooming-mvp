@@ -7,6 +7,7 @@ import { useSession } from '../lib/SessionContext';
 export default function AuthScreen() {
   const { signIn, isDemo } = useSession();
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('test1234');
   const [role, setRole] = useState('client');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,7 +16,20 @@ export default function AuthScreen() {
     setLoading(true);
     setError('');
     try {
-      await signIn(phone, role);
+      await signIn(phone, role, password);
+    } catch (e) {
+      setError(e?.message || '登录失败，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const quickLogin = async (r, p) => {
+    setRole(r);
+    setLoading(true);
+    setError('');
+    try {
+      await signIn(p, r, 'test1234');
     } catch (e) {
       setError(e?.message || '登录失败，请重试');
     } finally {
@@ -28,13 +42,23 @@ export default function AuthScreen() {
       <Text style={styles.logo}>🐾 PawGo</Text>
       <Text style={styles.slogan}>像叫 Grab 一样叫上门宠物理发师</Text>
 
-      <Label>手机号（OTP 一键登录）</Label>
+      <Label>手机号</Label>
       <TextInput
         style={styles.input}
         placeholder="+65 9xxx xxxx"
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}
+        autoCapitalize="none"
+      />
+
+      <Label>密码</Label>
+      <TextInput
+        style={styles.input}
+        placeholder="test1234"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
         autoCapitalize="none"
       />
 
@@ -48,40 +72,12 @@ export default function AuthScreen() {
 
       <BigButton label={loading ? '登录中…' : '登录 / 注册'} onPress={onSubmit} disabled={loading} />
 
-      {isDemo && (
-        <>
-          <Sub style={{ textAlign: 'center', marginTop: gap }}>
-            演示模式已开启：可不填手机号，直接点登录体验完整闭环
-          </Sub>
-          <View style={{ height: 8 }} />
-          <BigButton
-            label="一键体验（客户）"
-            variant="ghost"
-            onPress={async () => {
-              setRole('client');
-              setLoading(true);
-              try {
-                await signIn('+6599999999', 'client');
-              } finally {
-                setLoading(false);
-              }
-            }}
-          />
-          <BigButton
-            label="一键体验（美容师）"
-            variant="ghost"
-            onPress={async () => {
-              setRole('groomer');
-              setLoading(true);
-              try {
-                await signIn('+6588888888', 'groomer');
-              } finally {
-                setLoading(false);
-              }
-            }}
-          />
-        </>
-      )}
+      <Sub style={{ textAlign: 'center', marginTop: gap }}>
+        测试账号密码均为 test1234。演示客户 +6598000010 / 美容师 +6598000001
+      </Sub>
+      <View style={{ height: 8 }} />
+      <BigButton label="一键体验（客户）" variant="ghost" onPress={() => quickLogin('client', '+6598000010')} />
+      <BigButton label="一键体验（美容师 Asha）" variant="ghost" onPress={() => quickLogin('groomer', '+6598000001')} />
     </ScrollView>
   );
 }
@@ -102,4 +98,3 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', marginBottom: gap, flexWrap: 'wrap' },
   error: { color: colors.danger, marginBottom: 8, textAlign: 'center' },
 });
-

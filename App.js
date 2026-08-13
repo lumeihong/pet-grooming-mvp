@@ -58,7 +58,7 @@ function RootNavigator() {
           </>
         ) : session.role === 'groomer' ? (
           <>
-            <Stack.Screen name="GroomerHome" component={GroomerHome} options={{ title: '接单大厅' }} />
+            <Stack.Screen name="GroomerHome" component={GroomerHome} options={{ title: '派单' }} />
             <Stack.Screen name="OrderTake" component={OrderTake} options={{ title: '订单详情' }} />
             <Stack.Screen name="ActiveOrders" component={ActiveOrders} options={{ title: '进行中' }} />
             <Stack.Screen name="Chat" component={ChatScreen} options={{ title: '临时聊天' }} />

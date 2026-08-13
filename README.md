@@ -21,31 +21,42 @@ React Native (Expo) + Supabase 的 MVP 实现，覆盖商业计划书中的完�
 
 ---
 
-## 快速开始（演示模式，无需后端）
+## 快速开始
 
 ```bash
 npm install
 npx expo start
 ```
 
-- 默认 `USE_DEMO_MODE=true`（见 `app.json`），**内存模拟数据层**直接跑通端到端闭环，无需 Supabase 账号。
-- 打开 Expo Go 扫码即可体验：发布需求 → 看推荐 → 模拟支付 → 聊天 → 完成评价。
+- 打开 Expo Go 扫码即可体验。当前默认 `USE_DEMO_MODE=false`，直接连真实 Supabase 测试库。
+- 想离线演示可改回 `"USE_DEMO_MODE": "true"`（内存模拟数据层，无需后端）。
 
-## 接入真实 Supabase
+## 测试账号（seed 已灌入，密码均为 `test1234`）
 
-1. 在 [supabase.com](https://supabase.com) 建项目，复制 URL 与 anon key。
-2. 在 Supabase SQL Editor 全量执行 `supabase/schema.sql`（建表 + 匹配函数 + RLS 策略）。
-3. 修改 `app.json` 的 `extra`：
-   ```json
-   "extra": {
-     "SUPABASE_URL": "https://xxxx.supabase.co",
-     "SUPABASE_ANON_KEY": "eyJ...",
-     "USE_DEMO_MODE": "false"
-   }
-   ```
-4. 重新 `npx expo start`。
+| 角色 | 手机号 | 说明 |
+|------|--------|------|
+| 客户 | +6598000010 | Test Owner |
+| 美容师 | +6598000001 | Asha（在线） |
+| 美容师 | +6598000002 | Wei Jie（在线） |
+| 美容师 | +6598000003 | Mei Ling（离线，用于验证硬过滤） |
 
-> 手机号 OTP 需在 Supabase Auth 开启 Phone 登录并配置短信服务商（Twilio / 其它）。
+登录页有「一键体验」按钮。也可在登录页输新手机号注册（走 Supabase Auth signUp）。
+
+## 接入真实 Supabase（一次性配置）
+
+1. 在 [supabase.com](https://supabase.com) 建项目，复制 URL 与 anon key 填入 `app.json` 的 `extra`。
+2. SQL Editor 全量执行 `supabase/schema.sql`（建表 + 匹配函数 + RLS 策略）。
+3. SQL Editor 全量执行 `supabase/seed.sql`（测试账号 + 测试订单，含 `phone_confirmed_at`）。
+4. **Dashboard → Authentication → Providers → Phone → 打开 Enable 并保存**。
+   本项目用「手机号 + 密码」登录，无需配置 Twilio 等短信服务商（仅当需要新手机号 OTP 注册时才要配）。
+5. `npx expo start` 重开。
+
+## 验证脚本
+
+```bash
+npm run verify                        # demo 模式端到端逻辑断言（16 项，无需网络）
+node scripts/verify-supabase-e2e.js   # 真实 Supabase 闭环断言（连测试库跑通全流程）
+```
 
 ---
 
@@ -68,9 +79,9 @@ pet-grooming-mvp/
     └── screens/
         ├── AuthScreen.js
         ├── ChatScreen.js        # 隐私核心：状态机控制开闭
-        ├── client/              # 9 页（登录/首页/发布/匹配/支付/详情/聊天/评价/我的）
-        ├── groomer/             # 7 页（大厅/接单/进行中/聊天/资料/收入）
-        └── admin/               # 后台：审核/订单/聊天记录/数据
+        ├── client/              # 客户端（首页/发布/匹配/支付/详情/聊天/评价/我的）
+        ├── groomer/             # 美容师端（派单/订单详情/进行中/资料/收入，绑定式无抢单大厅）
+        └── admin/               # 极简后台（只读）：数据概览/订单/纠纷聊天记录
 ```
 
 ---
