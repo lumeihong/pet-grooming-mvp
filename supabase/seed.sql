@@ -12,22 +12,28 @@
 -- ============================================================
 
 -- 1) 测试登录账号（auth.users）
--- 注意：phone_confirmed_at 必须设置，否则手机号+密码登录会被拒绝（phone not confirmed）
-insert into auth.users (id, phone, phone_confirmed_at, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+-- 注意三处必填，否则登录失败：
+--   phone_confirmed_at  —— 未确认会被拒（phone not confirmed）
+--   aud / role          —— GoTrue 按 aud='authenticated' 过滤，NULL 报 Invalid login credentials
+--   instance_id         —— 固定 '00000000-0000-0000-0000-000000000000'
+insert into auth.users (instance_id, id, aud, role, phone, phone_confirmed_at, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
-  ('11111111-1111-1111-1111-111111111101', '+6598000001', now(), crypt('test1234', gen_salt('bf')),
+  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111101', 'authenticated', 'authenticated', '+6598000001', now(), crypt('test1234', gen_salt('bf')),
    '{"provider":"phone","providers":["phone"]}', '{"role":"groomer","name":"Asha"}', now(), now()),
-  ('11111111-1111-1111-1111-111111111102', '+6598000002', now(), crypt('test1234', gen_salt('bf')),
+  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111102', 'authenticated', 'authenticated', '+6598000002', now(), crypt('test1234', gen_salt('bf')),
    '{"provider":"phone","providers":["phone"]}', '{"role":"groomer","name":"Wei Jie"}', now(), now()),
-  ('11111111-1111-1111-1111-111111111103', '+6598000003', now(), crypt('test1234', gen_salt('bf')),
+  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111103', 'authenticated', 'authenticated', '+6598000003', now(), crypt('test1234', gen_salt('bf')),
    '{"provider":"phone","providers":["phone"]}', '{"role":"groomer","name":"Mei Ling"}', now(), now()),
-  ('11111111-1111-1111-1111-111111111201', '+6598000010', now(), crypt('test1234', gen_salt('bf')),
+  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111201', 'authenticated', 'authenticated', '+6598000010', now(), crypt('test1234', gen_salt('bf')),
    '{"provider":"phone","providers":["phone"]}', '{"role":"client","name":"Test Owner"}', now(), now())
 on conflict (id) do nothing;
 
--- 兜底：若之前已跑过旧版 seed（账号已存在但未确认手机），这里补确认
+-- 兜底：若之前已跑过旧版 seed（账号已存在但缺 aud/role/确认手机），这里补齐
 update auth.users
-set phone_confirmed_at = coalesce(phone_confirmed_at, now()),
+set aud = 'authenticated',
+    role = 'authenticated',
+    instance_id = coalesce(instance_id, '00000000-0000-0000-0000-000000000000'),
+    phone_confirmed_at = coalesce(phone_confirmed_at, now()),
     raw_app_meta_data = raw_app_meta_data || '{"provider":"phone","providers":["phone"]}'::jsonb
 where phone in ('+6598000001', '+6598000002', '+6598000003', '+6598000010');
 
