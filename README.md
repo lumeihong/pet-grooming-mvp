@@ -47,8 +47,12 @@ npx expo start
 1. 在 [supabase.com](https://supabase.com) 建项目，复制 URL 与 anon key 填入 `app.json` 的 `extra`。
 2. SQL Editor 全量执行 `supabase/schema.sql`（建表 + 匹配函数 + RLS 策略）。
 3. SQL Editor 全量执行 `supabase/seed.sql`（测试账号 + 测试订单，含 `phone_confirmed_at`）。
-4. **Dashboard → Authentication → Providers → Phone → 打开 Enable 并保存**。
-   本项目用「手机号 + 密码」登录，无需配置 Twilio 等短信服务商（仅当需要新手机号 OTP 注册时才要配）。
+4. **Dashboard → Authentication → Providers → Phone**：
+   - 打开 Enable Phone provider；
+   - SMS provider 为表单必填项，但密码登录不发短信 —— 选 Twilio，三个必填字段填占位值即可
+     （如 `AC000...` / `000...` / `MG000...`）；
+   - **关闭 "Enable phone confirmations"**，否则新手机号注册会走真实短信（假凭据会失败）。
+   真实上线前再换真 Twilio 凭据并打开 confirmations，代码无需改动。
 5. `npx expo start` 重开。
 
 ## 验证脚本
