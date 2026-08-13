@@ -1,0 +1,37 @@
+flowchart TD
+    AppEntry([App.js AppEntry]) --> Auth{session?}
+
+    Auth -->|null| AuthScreen["AuthScreen<br/>登录/角色选择"]
+    AuthScreen -->|signIn client| ClientHome
+    AuthScreen -->|signIn groomer| GroomerHome
+    AuthScreen -->|signIn admin| Admin["AdminScreen<br/>后台管理"]
+
+    subgraph CLIENT["客户端 Stack (role=client)"]
+        ClientHome["ClientHome 首页"]
+        ClientHome -->|nav PostRequest| PostRequest["PostRequest 发布需求"]
+        ClientHome -->|nav OrderDetail orderId| OrderDetail["OrderDetail 订单详情"]
+        ClientHome -->|nav MyProfile| MyProfile["MyProfile 我的"]
+
+        PostRequest -->|"createOrder() → matching<br/>nav MatchResult order"| MatchResult["MatchResult 匹配结果"]
+        MatchResult -->|"confirmGroomer() → awaiting_deposit<br/>nav PayDeposit orderId"| PayDeposit["PayDeposit 支付定金"]
+        PayDeposit -->|"payDeposit() → confirmed 聊天开启<br/>replace OrderDetail orderId"| OrderDetail
+        OrderDetail -->|"chatOpen? nav Chat orderId<br/>(confirmed/in_progress)"| ChatC["ChatScreen 临时聊天"]
+        OrderDetail -->|"completed? nav Review orderId"| Review["ReviewScreen 评价"]
+        Review -->|"addReview()+completeOrder()<br/>nav ClientHome"| ClientHome
+        MyProfile -->|nav ClientHome| ClientHome
+    end
+
+    subgraph GROOMER["美容师端 Stack (role=groomer)"]
+        GroomerHome["GroomerHome 接单大厅"]
+        GroomerHome -->|nav OrderTake orderId| OrderTake["OrderTake 订单详情·未接"]
+        GroomerHome -->|nav ActiveOrders| ActiveOrders["ActiveOrders 进行中"]
+        GroomerHome -->|nav GroomerProfile| GroomerProfile["GroomerProfile 资料设置"]
+        GroomerHome -->|nav GroomerIncome| GroomerIncome["GroomerIncome 收入历史"]
+
+        OrderTake -->|"confirmGroomer()+payDeposit()<br/>replace ActiveOrders"| ActiveOrders
+        ActiveOrders -->|"advanceStatus() 出发→到达→完成"| ActiveOrders
+        ActiveOrders -->|nav Chat orderId| ChatG["ChatScreen 临时聊天"]
+    end
+
+    ChatC <-.同订单聊天通道.-> ChatG
+    MatchResult -.匹配推荐.-> GroomerHome
